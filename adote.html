@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adote</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="cabecalho">
+        <a href="inicio.html" class="link-logo">
+            <img src="imagens/logo-extensa.png" alt="logo" class="logo-cabecalho">
+        </a>
+        <nav class="nav-cabecalho">
+            <a href="inicio.html">Início</a>
+            <a href="Sobrenos.html">Sobre Nós</a>
+            <a href="adote.html">Adote</a>
+            <a href="nos-apoie.html">Nos Apoie</a>
+            <a href="faleconosco.html">Fale Conosco</a>
+        </nav>
+    </header>
+
+    <section id="section-animais">
+        <h1 id="titulo-adote">ADOTE UM ANIMAL</h1>
+
+        <!-- Este contêiner será preenchido pelo JavaScript -->
+        <div id="animais-container">
+            <!-- Os animais cadastrados aparecerão aqui -->
+        </div>
+    </section>
+
+    <footer class="rodape">
+        <div class="sobre-rodape">
+            <img src="imagens/logo-extensa.png" alt="logo extensa">
+            <p>Somos uma ONG que resgata animais em situação de rua e maus tratos, cuidados e direcionamos para adoções responsáveis.</p>
+        </div>
+        <div class="contato-rodape">
+            <a href="https://www.google.com/maps?q=Av.+Jos%C3%A9+Estima+Filho+-+Parque+Santa+Barbara,+S%C3%A3o+Paulo+-+SP,+Brasil"><img src="imagens/mapa.jpg" alt="mapa" class="mapa"></a>
+            <p>Endereço: Av. José Estima Filho - Jardim Ângela</p>
+        </div>
+    </footer>
+
+    <script>
+        // URL da nossa API para listar os animais
+        const API_URL = 'http://localhost/projeto-adocao/api/animais/listar.php';
+
+        // Função para criar o HTML de um cartão de animal
+        function criarCardAnimal(animal) {
+            const tagClasse = animal.sexo.toLowerCase() === 'fêmea' ? 'tag-femea' : 'tag-macho';
+
+            // Verifica se as flags 'castrado' e 'vacinado' são verdadeiras (valor 1)
+            const tagCastrado = animal.castrado == 1 ? `<li class="${tagClasse}">Castrado</li>` : '';
+            const tagVacinado = animal.vacinado == 1 ? `<li class="${tagClasse}">Vacinado</li>` : '';
+
+            // Usa template literals (crases) para construir o HTML facilmente
+            return `
+                <div class="card-animal">
+                    <img src="${animal.foto_url}" class="foto-animal" alt="Foto do animal ${animal.nome}">
+                    <h3>${animal.nome.toUpperCase()}</h3>
+                    <ul>
+                        <li class="${tagClasse}">${animal.sexo}</li>
+                        <li class="${tagClasse}">${animal.idade}</li>
+                        <li class="${tagClasse}">Porte ${animal.porte}</li>
+                        ${tagCastrado}
+                        ${tagVacinado}
+                    </ul>
+                    <p>${animal.descricao}</p>
+                    <button>
+                        <a href="cadastro.html?animal=${encodeURIComponent(animal.nome)}" target="_blank">
+                            ADOTAR
+                        </a>
+                    </button>
+                </div>
+            `;
+        }
+
+        // Função principal que busca os dados e exibe na tela
+        async function carregarAnimais() {
+            const container = document.getElementById('animais-container');
+            container.innerHTML = '<p style="text-align: center;">Carregando animais...</p>';
+
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error('Falha na rede ou API indisponível.');
+                }
+                const animais = await response.json();
+
+                // Limpa a mensagem de "carregando"
+                container.innerHTML = '';
+
+                if (animais.length > 0) {
+                    // Para cada animal retornado pela API, cria e adiciona o cartão no container
+                    animais.forEach(animal => {
+                        const cardHtml = criarCardAnimal(animal);
+                        container.innerHTML += cardHtml;
+                    });
+                } else {
+                    container.innerHTML = '<p style="text-align: center;">Nenhum animal disponível para adoção no momento.</p>';
+                }
+
+            } catch (error) {
+                console.error('Erro ao buscar dados da API:', error);
+                container.innerHTML = `
+                    <p style="text-align: center; color: red;">
+                        <strong>Ocorreu um erro ao carregar os animais.</strong><br>
+                        Por favor, verifique se o XAMPP está rodando (Apache e MySQL) e tente recarregar a página.
+                    </p>
+                `;
+            }
+        }
+
+        // Chama a função para carregar os animais assim que a página for aberta
+        window.onload = carregarAnimais;
+    </script>
+</body>
+</html>
+

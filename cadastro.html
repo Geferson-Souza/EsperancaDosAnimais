@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro para Adoção de Animais</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body id="pag-cadastro">
+
+    <header class="cabecalho">
+        <a href="inicio.html" class="link-logo">
+            <img src="imagens/logo-extensa.png" alt="Logo ONG" class="logo-cabecalho"/>
+        </a>
+        <h1 id="cabecalho-h1">Formulário de Adoção</h1>
+    </header>
+
+    <div class="form-container">
+        <h2>Seus Dados</h2>
+        <form id="form-adocao">
+            <label for="nome">Nome Completo</label>
+            <input type="text" id="nome" name="nome" required>
+
+            <label for="nascimento">Data de Nascimento</label>
+            <input type="date" id="nascimento" name="nascimento" required>
+
+            <label for="instagram">Perfil do Instagram (Nosso primeiro contato é por lá)</label>
+            <input type="text" id="instagram" name="instagram" placeholder="@seuperfil" required>
+
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="telefone">Telefone/Whatsapp</label>
+            <input type="tel" id="telefone" name="telefone" required>
+
+            <label for="endereco">Endereço Completo</label>
+            <input type="text" id="endereco" name="endereco" required>
+
+            <label for="tipo_moradia">Você mora em?</label>
+            <select id="tipo_moradia" name="tipo_moradia" required>
+                <option value="Casa">Casa</option>
+                <option value="Apartamento">Apartamento</option>
+                <option value="Outro">Outro</option>
+            </select>
+
+            <label for="motivo">Por que você deseja adotar um animal?</label>
+            <textarea id="motivo" name="motivo" rows="4" maxlength="500" required></textarea>
+
+            <label for="outros_animais">Você possui outros animais?</label>
+            <textarea id="outros_animais" name="outros_animais" rows="2"></textarea>
+
+            <label for="concorda_termos">Está de acordo com a entrevista por videochamada e a taxa de contribuição de R$200,00 caso seja aprovado(a)?</label>
+            <select id="concorda_termos" name="concorda_termos" required>
+                <option value="">Selecione</option>
+                <option value="1">Sim</option>
+                <option value="0">Não</option>
+            </select>
+
+            <label for="animal_desejado">Nome do animal que você deseja adotar</label>
+            <input type="text" id="animal_desejado" name="animal_desejado" required readonly style="background-color: #e9ecef;">
+
+            <button type="submit" id="submit-button">Enviar Cadastro</button>
+        </form>
+    </div>
+
+    <footer class="rodape">
+        <div class="sobre-rodape">
+            <img src="imagens/logo-extensa.png" alt="logo extensa">
+            <p>Somos uma ONG que resgata animais em situação de rua e maus tratos, cuidados e direcionamos para adoções responsáveis.</p>
+        </div>
+        <div class="contato-rodape">
+            <a href="https://www.google.com/maps?q=Av.+Jos%C3%A9+Estima+Filho+-+Parque+Santa+Barbara,+S%C3%A3o+Paulo+-+SP,+Brasil"><img src="imagens/mapa.jpg" alt="mapa" class="mapa"></a>
+            <p>Endereço: Av. José Estima Filho - Jardim Ângela</p>
+        </div>
+    </footer>
+
+    <script>
+        // Função para preencher o nome do animal a partir da URL
+        function preencherAnimal() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nomeAnimal = urlParams.get('animal');
+            if (nomeAnimal) {
+                // Decodifica o nome do animal que vem da URL (ex: espaços %20 viram espaços normais)
+                document.getElementById('animal_desejado').value = decodeURIComponent(nomeAnimal);
+            } else {
+                document.getElementById('animal_desejado').value = "Nenhum animal selecionado";
+            }
+        }
+
+        // Função para enviar os dados do formulário para a API
+        async function enviarFormulario(event) {
+            event.preventDefault(); // Impede o recarregamento da página
+
+            const form = document.getElementById('form-adocao');
+            const button = document.getElementById('submit-button');
+            const formData = new FormData(form);
+            
+            button.disabled = true;
+            button.textContent = 'Enviando...';
+
+            try {
+                // O caminho relativo 'api/...' funciona corretamente quando a página
+                // é acedida a partir do mesmo servidor (localhost)
+                const response = await fetch('api/cadastros/criar.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // Verifica se a resposta da API é válida antes de tentar ler como JSON
+                if (!response.ok) {
+                    // Tenta obter mais detalhes do erro do servidor
+                    const errorText = await response.text();
+                    throw new Error(`Erro na API: ${response.statusText}. Detalhes: ${errorText}`);
+                }
+
+                const resultado = await response.json();
+
+                if (resultado.success) {
+                    alert('Cadastro enviado com sucesso! Entraremos em contato em breve pelo Instagram.');
+                    form.reset();
+                    window.location.href = 'inicio.html';
+                } else {
+                    alert('Erro ao enviar cadastro: ' + (resultado.error || 'Erro desconhecido retornado pela API.'));
+                }
+
+            } catch (error) {
+                console.error('Erro de rede ou na API:', error);
+                alert('Ocorreu um erro de comunicação. Verifique se o XAMPP está rodando e tente novamente.');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Enviar Cadastro';
+            }
+        }
+
+        // Adiciona os "escutadores" de eventos
+        window.onload = preencherAnimal;
+        document.getElementById('form-adocao').addEventListener('submit', enviarFormulario);
+    </script>
+</body>
+</html>
+
